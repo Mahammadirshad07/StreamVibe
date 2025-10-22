@@ -10,40 +10,50 @@ function Home() {
   const [popular, setPopular] = useState([]);
   const [topRated, setTopRated] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showVideo, setShowVideo] = useState(false);
   const [heroTrailerKey, setHeroTrailerKey] = useState(null);
   const navigate = useNavigate();
 
-  const HERO_MOVIE_ID = 66732; // Stranger Things
+  const HERO_MOVIE_ID = 66732;
   const HERO_MOVIE_TYPE = 'tv';
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const [trendingData, popularData, topRatedData, heroDetails] = await Promise.all([
+        console.log('Fetching movies...');
+        
+        const [trendingData, popularData, topRatedData] = await Promise.all([
           getTrending(),
           getPopular(),
-          getTopRated(),
-          getTVDetails(HERO_MOVIE_ID)
+          getTopRated()
         ]);
         
-        setTrending(trendingData);
-        setPopular(popularData);
-        setTopRated(topRatedData);
+        console.log('Trending:', trendingData);
+        console.log('Popular:', popularData);
         
-        // Get trailer from API (finds first available trailer)
-        const videos = heroDetails?.videos?.results || [];
-        const trailer = videos.find(v => 
-          v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
-        );
+        setTrending(trendingData || []);
+        setPopular(popularData || []);
+        setTopRated(topRatedData || []);
         
-        if (trailer) {
-          setHeroTrailerKey(trailer.key);
+        // Fetch hero details
+        try {
+          const heroDetails = await getTVDetails(HERO_MOVIE_ID);
+          const videos = heroDetails?.videos?.results || [];
+          const trailer = videos.find(v => 
+            v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+          );
+          if (trailer) {
+            setHeroTrailerKey(trailer.key);
+          }
+        } catch (err) {
+          console.error('Hero fetch error:', err);
         }
         
         setLoading(false);
       } catch (error) {
         console.error('Error fetching movies:', error);
+        setError(error.message);
         setLoading(false);
       }
     };
@@ -63,17 +73,50 @@ function Home() {
     navigate(`/detail/${HERO_MOVIE_TYPE}/${HERO_MOVIE_ID}`);
   };
 
+  // Loading State
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-2xl">Loading...</div>
+        <div className="text-white text-2xl">Loading awesome content...</div>
+      </div>
+    );
+  }
+
+  // Error State
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4">
+        <div className="text-red-600 text-3xl font-bold mb-4">⚠️ Oops!</div>
+        <div className="text-white text-xl mb-4">Failed to load movies</div>
+        <div className="text-gray-400 text-sm mb-6">Error: {error}</div>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded font-semibold"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
+  // Empty State
+  if (!trending.length && !popular.length && !topRated.length) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4">
+        <div className="text-white text-2xl mb-4">No movies found</div>
+        <div className="text-gray-400 mb-6">Check your API connection</div>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded font-semibold"
+        >
+          Refresh
+        </button>
       </div>
     );
   }
 
   return (
     <div className="pt-0">
-      {/* Video Player Modal */}
       {showVideo && heroTrailerKey && (
         <VideoPlayer 
           videoKey={heroTrailerKey}
@@ -82,19 +125,25 @@ function Home() {
         />
       )}
 
-      {/* Hero Section */}
-      <div 
-        className="relative h-[70vh] md:h-screen w-full"
-        style={{
-          backgroundImage: 'url(https://image.tmdb.org/t/p/original/56v2KjBlU4XaOv9rVYEQypROD7P.jpg)',
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
-      >
+      {/* Hero Section with IMG Tag (Most Reliable) */}
+      <div className="relative h-[70vh] md:h-screen w-full overflow-hidden bg-black">
+        {/* Background Image as IMG with Fallback */}
+        <img 
+          src="https://image.tmdb.org/t/p/original/56v2KjBlU4XaOv9rVYEQypROD7P.jpg"
+          alt="Stranger Things"
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={(e) => {
+            e.target.onerror = null;
+            e.target.src = 'https://wallpapercave.com/wp/wp4056410.jpg';
+          }}
+        />
+        
+        {/* Dark Overlays */}
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black"></div>
 
-        <div className="relative h-full flex flex-col justify-center px-6 md:px-12 lg:px-16 max-w-4xl">
+        {/* Content */}
+        <div className="relative h-full flex flex-col justify-center px-6 md:px-12 lg:px-16 max-w-4xl z-10">
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-2xl">
             Stranger Things
           </h1>
@@ -122,15 +171,15 @@ function Home() {
 
       {/* Movie Rows Section */}
       <div className="px-4 md:px-8 lg:px-16 py-8 md:py-12 space-y-8 md:space-y-12">
-        <MovieRow title="Trending Now" movies={trending} />
-        <MovieRow title="Popular on StreamVibe" movies={popular} />
-        <MovieRow title="Top Rated" movies={topRated} />
+        {trending.length > 0 && <MovieRow title="Trending Now" movies={trending} />}
+        {popular.length > 0 && <MovieRow title="Popular on StreamVibe" movies={popular} />}
+        {topRated.length > 0 && <MovieRow title="Top Rated" movies={topRated} />}
       </div>
     </div>
   );
 }
 
-// Movie Row Component
+// MovieRow Component
 function MovieRow({ title, movies }) {
   const scrollContainerRef = useRef(null);
   const navigate = useNavigate();
@@ -143,7 +192,6 @@ function MovieRow({ title, movies }) {
     };
     
     updateFavs();
-    
     window.addEventListener('storage', updateFavs);
     window.addEventListener('favoritesChanged', updateFavs);
     
@@ -177,9 +225,12 @@ function MovieRow({ title, movies }) {
     
     const favorites = JSON.parse(localStorage.getItem('streamvibe_favorites') || '[]');
     setFavs(favorites.map(f => f.id));
-    
     window.dispatchEvent(new Event('favoritesChanged'));
   };
+
+  if (!movies || movies.length === 0) {
+    return null;
+  }
 
   return (
     <div className="relative group">
