@@ -4,19 +4,18 @@ import { getTVShowsOnly, getImageUrl } from '../utils/tmdb';
 import { FaHeart, FaRegHeart } from 'react-icons/fa';
 import { addToFavorites, removeFromFavorites, isFavorite } from '../utils/favorites';
 
-function TvShows() {
+function TVShows() {
   const [shows, setShows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [favs, setFavs] = useState([]); // Add this state
+  const [favs, setFavs] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchShows();
   }, [page]);
 
-  // Listen for favorites changes
   useEffect(() => {
     updateFavorites();
     
@@ -102,6 +101,10 @@ function TvShows() {
               src={getImageUrl(show.poster_path)}
               alt={show.name}
               className="w-full h-auto rounded-lg hover:scale-105 transition"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="300"%3E%3Crect fill="%23333" width="200" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+              }}
             />
             <div className="mt-2">
               <h3 className="text-white text-sm font-semibold truncate">
@@ -139,4 +142,4 @@ function TvShows() {
   );
 }
 
-export default TvShows;
+export default TVShows;

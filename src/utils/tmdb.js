@@ -1,92 +1,137 @@
 const API_KEY = '95adc5035d8cca4e8850ff7ad9c23431';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-// Get Trending Movies/TV Shows
 export const getTrending = async () => {
-  const response = await fetch(
-    `${BASE_URL}/trending/all/week?api_key=${API_KEY}`
-  );
-  const data = await response.json();
-  return data.results;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/trending/all/week?api_key=${API_KEY}`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error('getTrending error:', error);
+    return [];
+  }
 };
 
-// Get Popular Movies
 export const getPopular = async () => {
-  const response = await fetch(
-    `${BASE_URL}/movie/popular?api_key=${API_KEY}`
-  );
-  const data = await response.json();
-  return data.results;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/movie/popular?api_key=${API_KEY}`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error('getPopular error:', error);
+    return [];
+  }
 };
 
-// Get Top Rated Movies
 export const getTopRated = async () => {
-  const response = await fetch(
-    `${BASE_URL}/movie/top_rated?api_key=${API_KEY}`
-  );
-  const data = await response.json();
-  return data.results;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/movie/top_rated?api_key=${API_KEY}`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error('getTopRated error:', error);
+    return [];
+  }
 };
 
-// Get Movie Details (with cast, videos, similar movies)
 export const getMovieDetails = async (id) => {
-  const response = await fetch(
-    `${BASE_URL}/movie/${id}?api_key=${API_KEY}&append_to_response=credits,videos,similar`
-  );
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/movie/${id}?api_key=${API_KEY}&append_to_response=credits,videos,similar`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('getMovieDetails error:', error);
+    return null;
+  }
 };
 
-// Get TV Show Details (with cast, videos, similar shows)
 export const getTVDetails = async (id) => {
-  const response = await fetch(
-    `${BASE_URL}/tv/${id}?api_key=${API_KEY}&append_to_response=credits,videos,similar`
-  );
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/tv/${id}?api_key=${API_KEY}&append_to_response=credits,videos,similar`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('getTVDetails error:', error);
+    return null;
+  }
 };
 
-// Get Image URL with size options
 export const getImageUrl = (path, size = 'w500') => {
-  if (!path) return 'https://via.placeholder.com/500x750?text=No+Image';
+  if (!path) {
+    return 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="500" height="750"%3E%3Crect fill="%23222" width="500" height="750"/%3E%3Ctext fill="%23666" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" font-size="24"%3ENo Image%3C/text%3E%3C/svg%3E';
+  }
   return `https://image.tmdb.org/t/p/${size}${path}`;
 };
 
-// Search for Movies and TV Shows
 export const searchMulti = async (query) => {
   if (!query) return [];
   
-  const response = await fetch(
-    `${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`
-  );
-  const data = await response.json();
-  return data.results;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/search/multi?api_key=${API_KEY}&query=${encodeURIComponent(query)}`
+    );
+    if (!response.ok) throw new Error('Failed to search');
+    const data = await response.json();
+    return data.results;
+  } catch (error) {
+    console.error('searchMulti error:', error);
+    return [];
+  }
 };
 
-// Get Only Movies (Discover Movies)
 export const getMoviesOnly = async (page = 1) => {
-  const response = await fetch(
-    `${BASE_URL}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&page=${page}`
-  );
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/discover/movie?api_key=${API_KEY}&sort_by=popularity.desc&page=${page}`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('getMoviesOnly error:', error);
+    return { results: [], total_pages: 0 };
+  }
 };
 
-// Get Only TV Shows
 export const getTVShowsOnly = async (page = 1) => {
-  const response = await fetch(
-    `${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=popularity.desc&page=${page}`
-  );
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/discover/tv?api_key=${API_KEY}&sort_by=popularity.desc&page=${page}`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('getTVShowsOnly error:', error);
+    return { results: [], total_pages: 0 };
+  }
 };
 
-// Get New & Popular (Latest Releases)
 export const getNewReleases = async (page = 1) => {
-  const response = await fetch(
-    `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&page=${page}`
-  );
-  const data = await response.json();
-  return data;
+  try {
+    const response = await fetch(
+      `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&page=${page}`
+    );
+    if (!response.ok) throw new Error('Failed to fetch');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('getNewReleases error:', error);
+    return { results: [], total_pages: 0 };
+  }
 };
-

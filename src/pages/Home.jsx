@@ -21,22 +21,16 @@ function Home() {
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        console.log('Fetching movies...');
-        
         const [trendingData, popularData, topRatedData] = await Promise.all([
           getTrending(),
           getPopular(),
           getTopRated()
         ]);
         
-        console.log('Trending:', trendingData);
-        console.log('Popular:', popularData);
-        
         setTrending(trendingData || []);
         setPopular(popularData || []);
         setTopRated(topRatedData || []);
         
-        // Fetch hero details
         try {
           const heroDetails = await getTVDetails(HERO_MOVIE_ID);
           const videos = heroDetails?.videos?.results || [];
@@ -73,16 +67,14 @@ function Home() {
     navigate(`/detail/${HERO_MOVIE_TYPE}/${HERO_MOVIE_ID}`);
   };
 
-  // Loading State
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
-        <div className="text-white text-2xl">Loading awesome content...</div>
+        <div className="text-white text-2xl">Loading...</div>
       </div>
     );
   }
 
-  // Error State
   if (error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4">
@@ -99,12 +91,11 @@ function Home() {
     );
   }
 
-  // Empty State
   if (!trending.length && !popular.length && !topRated.length) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-black px-4">
         <div className="text-white text-2xl mb-4">No movies found</div>
-        <div className="text-gray-400 mb-6">Check your API connection</div>
+        <div className="text-gray-400 mb-6">Check your connection</div>
         <button 
           onClick={() => window.location.reload()}
           className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded font-semibold"
@@ -125,9 +116,7 @@ function Home() {
         />
       )}
 
-      {/* Hero Section with IMG Tag (Most Reliable) */}
       <div className="relative h-[70vh] md:h-screen w-full overflow-hidden bg-black">
-        {/* Background Image as IMG with Fallback */}
         <img 
           src="https://image.tmdb.org/t/p/original/56v2KjBlU4XaOv9rVYEQypROD7P.jpg"
           alt="Stranger Things"
@@ -138,11 +127,9 @@ function Home() {
           }}
         />
         
-        {/* Dark Overlays */}
         <div className="absolute inset-0 bg-black opacity-40"></div>
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black"></div>
 
-        {/* Content */}
         <div className="relative h-full flex flex-col justify-center px-6 md:px-12 lg:px-16 max-w-4xl z-10">
           <h1 className="text-4xl md:text-5xl lg:text-7xl font-bold text-white mb-4 md:mb-6 drop-shadow-2xl">
             Stranger Things
@@ -169,7 +156,6 @@ function Home() {
         </div>
       </div>
 
-      {/* Movie Rows Section */}
       <div className="px-4 md:px-8 lg:px-16 py-8 md:py-12 space-y-8 md:space-y-12">
         {trending.length > 0 && <MovieRow title="Trending Now" movies={trending} />}
         {popular.length > 0 && <MovieRow title="Popular on StreamVibe" movies={popular} />}
@@ -179,7 +165,6 @@ function Home() {
   );
 }
 
-// MovieRow Component
 function MovieRow({ title, movies }) {
   const scrollContainerRef = useRef(null);
   const navigate = useNavigate();
@@ -228,9 +213,7 @@ function MovieRow({ title, movies }) {
     window.dispatchEvent(new Event('favoritesChanged'));
   };
 
-  if (!movies || movies.length === 0) {
-    return null;
-  }
+  if (!movies || movies.length === 0) return null;
 
   return (
     <div className="relative group">
@@ -270,7 +253,8 @@ function MovieRow({ title, movies }) {
                 alt={movie.title || movie.name}
                 className="w-full h-52 sm:h-56 md:h-60 lg:h-64 object-cover rounded-lg"
                 onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/200x300?text=No+Image';
+                  e.target.onerror = null;
+                  e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="300"%3E%3Crect fill="%23333" width="200" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
                 }}
               />
               <div className="mt-2">

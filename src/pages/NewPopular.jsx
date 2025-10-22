@@ -9,14 +9,13 @@ function NewPopular() {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [favs, setFavs] = useState([]); // Add this state
+  const [favs, setFavs] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchMovies();
   }, [page]);
 
-  // Listen for favorites changes
   useEffect(() => {
     updateFavorites();
     
@@ -102,6 +101,10 @@ function NewPopular() {
               src={getImageUrl(movie.poster_path)}
               alt={movie.title}
               className="w-full h-auto rounded-lg hover:scale-105 transition"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="300"%3E%3Crect fill="%23333" width="200" height="300"/%3E%3Ctext fill="%23999" x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
+              }}
             />
             <div className="mt-2">
               <h3 className="text-white text-sm font-semibold truncate">
