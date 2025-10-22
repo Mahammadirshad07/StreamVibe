@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight, FaHeart, FaRegHeart, FaPlay, FaInfoCircle } from 'react-icons/fa';
-import { getTrending, getPopular, getTopRated, getImageUrl } from '../utils/tmdb';
+import { getTrending, getPopular, getTopRated, getImageUrl, getTVDetails } from '../utils/tmdb';
 import { addToFavorites, removeFromFavorites, isFavorite } from '../utils/favorites';
 import VideoPlayer from '../components/VideoPlayer';
 
@@ -11,25 +11,36 @@ function Home() {
   const [topRated, setTopRated] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showVideo, setShowVideo] = useState(false);
+  const [heroTrailerKey, setHeroTrailerKey] = useState(null);
   const navigate = useNavigate();
 
-  // Stranger Things ID (you can change this to any movie/show)
   const HERO_MOVIE_ID = 66732; // Stranger Things
   const HERO_MOVIE_TYPE = 'tv';
-  const HERO_TRAILER_KEY = 'b9EkMc79ZSU'; // Stranger Things Season 1 trailer
 
   useEffect(() => {
     const fetchMovies = async () => {
       try {
-        const [trendingData, popularData, topRatedData] = await Promise.all([
+        const [trendingData, popularData, topRatedData, heroDetails] = await Promise.all([
           getTrending(),
           getPopular(),
-          getTopRated()
+          getTopRated(),
+          getTVDetails(HERO_MOVIE_ID)
         ]);
         
         setTrending(trendingData);
         setPopular(popularData);
         setTopRated(topRatedData);
+        
+        // Get trailer from API (finds first available trailer)
+        const videos = heroDetails?.videos?.results || [];
+        const trailer = videos.find(v => 
+          v.site === 'YouTube' && (v.type === 'Trailer' || v.type === 'Teaser')
+        );
+        
+        if (trailer) {
+          setHeroTrailerKey(trailer.key);
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error('Error fetching movies:', error);
@@ -41,7 +52,11 @@ function Home() {
   }, []);
 
   const handlePlayClick = () => {
-    setShowVideo(true);
+    if (heroTrailerKey) {
+      setShowVideo(true);
+    } else {
+      alert('No trailer available for this title');
+    }
   };
 
   const handleMoreInfoClick = () => {
@@ -59,9 +74,9 @@ function Home() {
   return (
     <div className="pt-0">
       {/* Video Player Modal */}
-      {showVideo && (
+      {showVideo && heroTrailerKey && (
         <VideoPlayer 
-          videoKey={HERO_TRAILER_KEY}
+          videoKey={heroTrailerKey}
           title="Stranger Things"
           onClose={() => setShowVideo(false)}
         />
@@ -85,15 +100,12 @@ function Home() {
           </h1>
           
           <div className="flex flex-col sm:flex-row gap-3 md:gap-4 mb-6 md:mb-8">
-            {/* Play Button */}
             <button 
               onClick={handlePlayClick}
               className="flex items-center justify-center gap-2 md:gap-3 bg-white text-black px-6 md:px-10 py-3 md:py-4 rounded-lg hover:bg-gray-300 transition font-bold text-base md:text-xl"
             >
               <FaPlay /> Play
             </button>
-            
-            {/* More Info Button */}
             <button 
               onClick={handleMoreInfoClick}
               className="flex items-center justify-center gap-2 md:gap-3 bg-gray-500 bg-opacity-70 text-white px-6 md:px-10 py-3 md:py-4 rounded-lg hover:bg-gray-600 transition font-bold text-base md:text-xl"
@@ -118,7 +130,7 @@ function Home() {
   );
 }
 
-// MovieRow Component (keep your existing code - don't change)
+// Movie Row Component
 function MovieRow({ title, movies }) {
   const scrollContainerRef = useRef(null);
   const navigate = useNavigate();
